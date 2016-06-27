@@ -1,0 +1,56 @@
+#!/system/bin/sh
+# L SPEED MOD
+# Copyright (C) 2015 Paget96
+#=======================================================================#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#=======================================================================#
+
+busybox=/system/etc/L_SPEED/00L_STUFF/busybox
+
+mount -o rw,remount / 2>/dev/null
+mount -o rw,remount / / 2>/dev/null
+mount -o rw,remount rootfs 2>/dev/null
+mount -o rw,remount /system 2>/dev/null
+mount -o rw,remount /system /system 2>/dev/null
+$busybox mount -o rw,remount / 2>/dev/null
+$busybox mount -o rw,remount / / 2>/dev/null
+$busybox mount -o rw,remount rootfs 2>/dev/null
+$busybox mount -o rw,remount /system 2>/dev/null
+$busybox mount -o rw,remount /system /system 2>/dev/null
+
+LS=/system/etc/L_SPEED/00L_STUFF/LOGS/LS_image_quality.log
+
+$busybox rm -f $LS
+$busybox touch $LS
+
+$busybox echo "# L Speed log" | $busybox tee -a $LS
+$busybox echo "" | $busybox tee -a $LS
+$busybox echo "$( date +"%m-%d-%Y %H:%M:%S" ) Enabling Good image quality..." | $busybox tee -a $LS
+
+setprop ro.media.enc.jpeg.quality 100
+setprop ro.media.enc.hpsetprop rof.vid.bps 8000000
+setprop ro.media.capture.maxres 8m
+setprop ro.media.panorama.defres 3264x1840
+setprop ro.media.panorama.frameres 1280x720
+setprop ro.camcorder.videoModes true
+setprop ro.media.enc.hprof.vid.fps 60
+setprop ro.media.dec.aud.wma.enabled 1
+setprop ro.media.dec.vid.wmv.enabled 1
+setprop ro.media.cam.preview.fps 0
+setprop ro.media.codec_priority_for_thumb so
+setprop ro.media.capture.flash led
+setprop ro.media.capture.flashMinV 3300000
+setprop ro.media.capture.torchIntensity 40
+setprop ro.media.capture.flashIntensity 70
+setprop ro.media.capture.fast.fps 4
+setprop ro.media.capture.slow.fps 120
+
+$busybox echo "" | $busybox tee -a $LS
+$busybox echo "$( date +"%m-%d-%Y %H:%M:%S" ) Image quality is enabled" | $busybox tee -a $LS

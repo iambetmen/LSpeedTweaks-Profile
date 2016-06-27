@@ -1,0 +1,77 @@
+#!/system/bin/sh
+# L SPEED MOD
+# Copyright (C) 2015 Paget96
+#Zipalign script for apps on /system and /data big thank to blaz1nr
+#=======================================================================#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the term rms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#=======================================================================#
+
+mount -o rw,remount / 2>/dev/null
+mount -o rw,remount / / 2>/dev/null
+mount -o rw,remount rootfs 2>/dev/null
+mount -o rw,remount /system 2>/dev/null
+mount -o rw,remount /system /system 2>/dev/null
+$busybox mount -o rw,remount / 2>/dev/null
+$busybox mount -o rw,remount / / 2>/dev/null
+$busybox mount -o rw,remount rootfs 2>/dev/null
+$busybox mount -o rw,remount /system 2>/dev/null
+$busybox mount -o rw,remount /system /system 2>/dev/null
+
+busybox=/system/etc/L_SPEED/00L_STUFF/busybox
+binary=/system/etc/L_SPEED/00L_STUFF/zipalign
+LS=/system/etc/L_SPEED/00L_STUFF/LOGS/LS_zipalign.log
+ZIPALIGNDB=/data/zipalign.db
+
+$busybox $busybox rm -f $LS
+$busybox touch $LS
+
+if [ ! -f $ZIPALIGNDB ]; then
+$busybox	touch $ZIPALIGNDB
+fi
+
+$busybox echo "# L Speed log" | $busybox tee -a $LS
+$busybox echo "" | $busybox tee -a $LS
+$busybox echo "Starting Automatic ZipAlign $( date +"%m-%d-%Y %H:%M:%S" )" | $busybox tee -a $LS
+
+for DIR in /data/app /system/app /system/priv-app
+do
+	cd $DIR;
+	for APK in *.apk */*.apk
+	do
+		if [ $APK -ot $ZIPALIGNDB ] && [ $($busybox grep "$DIR/$APK" $ZIPALIGNDB|$busybox wc -l) -gt 0 ]; then
+			$busybox echo "Already checked: $DIR/$APK" | $busybox tee -a $LS
+		else
+			ZIPCHECK=`$binary -c -v 4 $APK | $busybox grep FAILED | $busybox wc -l`
+			if [ $ZIPCHECK == "1" ]; then
+				$busybox echo "Now aligning: $DIR/$APK" | $busybox tee -a $LS
+				$binary -f 4 $APK /data/local/$APK
+				rc = "$?"
+				if [ $rc -eq 0 ]; then
+					if [ -e "/data/local/$APK" ]; then
+						$busybox cp -f -p "/data/local/$APK" "$APK" | $busybox tee -a $LS
+						$busybox rm -f "/data/local/$APK";
+						$busybox grep "$DIR/$APK" $ZIPALIGNDB > /dev/null || $busybox echo $DIR/$APK >> $ZIPALIGNDB
+					else
+						$busybox echo "ZipAligning $APK Failed (no output file)"  | $busybox tee -a $LS
+					fi
+				else
+					[ -f "/data/local/$APK" ] && $busybox rm -f "/data/local/$APK"
+					$busybox echo "ZipAligning $APK Failed (rc: $rc)"  | $busybox tee -a $LS
+				fi
+			else
+				$busybox echo "Already aligned: $DIR/$APK" | $busybox tee -a $LS;
+				$busybox grep "$DIR/$APK" $ZIPALIGNDB > /dev/null || $busybox echo $DIR/$APK >> $ZIPALIGNDB
+			fi
+		fi
+	done
+done
+
+$busybox touch $ZIPALIGNDB
+$busybox echo "Automatic ZipAlign finished at $( date +"%m-%d-%Y %H:%M:%S" )" | $busybox tee -a $LS

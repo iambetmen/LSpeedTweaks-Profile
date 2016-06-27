@@ -1,0 +1,54 @@
+#!/system/bin/sh
+# L SPEED MOD
+# Copyright (C) 2015 Paget96
+# Thanks to @JRummy16 and @ArjunrambZ
+#=======================================================================#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#  You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#=======================================================================#
+
+busybox=/system/etc/L_SPEED/00L_STUFF/busybox
+
+mount -o rw,remount / 2>/dev/null
+mount -o rw,remount / / 2>/dev/null
+mount -o rw,remount rootfs 2>/dev/null
+mount -o rw,remount /system 2>/dev/null
+mount -o rw,remount /system /system 2>/dev/null
+$busybox mount -o rw,remount / 2>/dev/null
+$busybox mount -o rw,remount / / 2>/dev/null
+$busybox mount -o rw,remount rootfs 2>/dev/null
+$busybox mount -o rw,remount /system 2>/dev/null
+$busybox mount -o rw,remount /system /system 2>/dev/null
+
+/system/xbin/daemonsu --auto-daemon &
+
+/system/etc/L_SPEED/00L_STUFF/fstrim -v /cache;
+/system/etc/L_SPEED/00L_STUFF/fstrim -v /data;
+/system/etc/L_SPEED/00L_STUFF/fstrim -v /system;
+
+ln -s /system/bin /bin
+ln -s /system/xbin /xbin
+
+# set timezone (if you're not between -0500 and -0800 you get PST)
+# todo - support other timezones
+timezone=`date +%z`
+if $busybox [ $timezone = "-0800" ]; then
+	TZ=PST8PDT
+elif $busybox [ $timezone = "-0700" ]; then
+	TZ=MST7MDT
+elif $busybox [ $timezone = "-0600" ]; then
+	TZ=CST6CDT
+elif $busybox [ $timezone = "-0500" ]; then
+	TZ=EST5EDT
+else
+	TZ=PST8PDT
+fi
+export TZ
+
+$busybox crond -c /system/etc/L_SPEED/cron
